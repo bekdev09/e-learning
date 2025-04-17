@@ -4,31 +4,31 @@ import { User } from "./User";
 interface ITeacher extends Document {
   user: Types.ObjectId | typeof User;
   bio: string;
-  specialities: string[]
-  teachingStyle?: string
-  educaton: {
-    degree: string
-    university: string
-    graduationYear: string
-  }[]
+  specialties: string[];
+  teachingStyle?: string;
+  education: {
+    degree: string;
+    university: string;
+    graduationYear: number;
+  }[];
   experience: {
     position: string;
     institution: string;
     years: number;
   }[];
   certificates: string[];
-  hourlRate: number
-  trialRate?: number
-  availibility: {
-    timezone: string
+  hourlyRate: number;
+  trialRate?: number;
+  availability: {
+    timezone: string;
     schedule: {
-      day: string
-      slots: string[]
-    }
-  }
-  isProfileCompleted: boolean
-  createdAt: Date
-  updatedAt: Date
+      day: string;
+      slots: string[];
+    }[];
+  };
+  isProfileCompleted: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const TeacherSchema = new Schema<ITeacher>({
@@ -45,7 +45,7 @@ const TeacherSchema = new Schema<ITeacher>({
     minlength: [100, 'Bio kamida 100 ta belgidan iborat bo\'lishi kerak'],
     maxlength: [1000, 'Bio 1000 ta belgidan oshmasligi kerak']
   },
-  specialities: {
+  specialties: {
     type: [String],
     required: [true, 'Mutaxassisliklar majburiy'],
     validate: {
@@ -58,6 +58,73 @@ const TeacherSchema = new Schema<ITeacher>({
     enum: ['structured', 'conversational', 'task-based', 'blended'],
     default: 'blended'
   },
+  education: [{
+    degree: { type: String, required: true },
+    university: { type: String, required: true },
+    graduationYear: {
+      type: Number,
+      min: [1950, 'Noto\'g\'ri bitirgan yil'],
+      max: [new Date().getFullYear(), 'Noto\'g\'ri bitirgan yil']
+    }
+  }],
+  experience: [{
+    position: { type: String, required: true },
+    institution: { type: String, required: true },
+    years: {
+      type: Number,
+      min: 0
+    }
+  }],
+  certificates: [{
+    type: [String],
+    validate: {
+      validator: (value: string[]) => value.length <= 10,
+      message: "sertifikatlar soni 10tadan oshmasligi kerak!"
+    }
+  }],
+  hourlyRate: {
+    type: Number,
+    required: true,
+    min: [5000, "Bir soatlik narx kamida 5000 so'm bo'lishi kerak"]
+  },
+  trialRate: {
+    type: Number,
+    validate: {
+      validator: function (this: ITeacher, value?: number) {
+        return !value || value < this.hourlyRate
+      },
+      message: "Sinov darsi narxi asosiy dars narxidan kam bo\'lishi kerak"
+    }
+  },
+  availability: {
+    timezone: {
+      type: String,
+      default: "UTC+5"
+    },
+    schedule: {
+      day: {
+        type: String,
+        enum: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+        required: true
+      },
+      slots: [{
+        type: String,
+        match: [/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Noto\'g\'ri vaqt formati (HH:MM)']
+      }]
+    }
+  },
+  isProfileCompleted: {
+    type: Boolean,
+    default: false
+  }
+}, { timestamps: true })
+
+TeacherSchema.virtual("avarageRating").get(function (this: ITeacher) {
+  // Keyinchalik Review modeli bilan integratsiya qilinadi
+  return 4.5 // Vaqtinchalik ma'lumot
 })
+
+TeacherSchema.index({ "specialties": 1 })
+TeacherSchema.index({ "hourlyRate": 1 })
 
 export const Teacher = model("Teacher", TeacherSchema)

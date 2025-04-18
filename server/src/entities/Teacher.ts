@@ -1,11 +1,17 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { User } from "./User";
-import { ITimestamps } from "./Shared";
+import { IGroupClassSettings, ITimestamps, TEACHING_LEVELS } from "./Shared";
 
-interface ITeacher extends Document, ITimestamps {
+interface ITeacher extends Document, ITimestamps, IGroupClassSettings {
   user: Types.ObjectId | typeof User;
   bio: string;
-  specialties: string[];
+  specialties: {
+    subject: string;
+    levels: string[];
+    hourlyRate: number;
+    yearsOfExperience?: number;
+    certification?: string; // e.g., "TESOL for English"
+  }[];
   teachingStyle?: string;
   education: {
     degree: string;
@@ -27,8 +33,23 @@ interface ITeacher extends Document, ITimestamps {
       slots: string[];
     }[];
   };
+  groupClasses: {
+    enabled: { type: Boolean, default: false },
+    classes: {
+      subject: string;
+      title: string;
+      description: string;
+      maxStudents: number;
+      minStudents: number;
+      price: number;
+      pricingType: 'perStudent' | 'flatRate';
+      discount?: {
+        minStudents: number;
+        percentage: number;
+      };
+    }[];
+  };
   isProfileCompleted: boolean;
-
 }
 
 const TeacherSchema = new Schema<ITeacher>({
@@ -45,14 +66,13 @@ const TeacherSchema = new Schema<ITeacher>({
     minlength: [100, 'Bio kamida 100 ta belgidan iborat bo\'lishi kerak'],
     maxlength: [1000, 'Bio 1000 ta belgidan oshmasligi kerak']
   },
-  specialties: {
-    type: [String],
-    required: [true, 'Mutaxassisliklar majburiy'],
-    validate: {
-      validator: (v: string[]) => v.length >= 1 && v.length <= 5,
-      message: 'Kamida 1 va ko\'pi bilan 5 ta mutaxassislik kiriting'
-    }
-  },
+  specialties: [{
+    subject: { type: String, required: true, enum: ['SAT', 'IELTS', 'PreSchool', 'President School', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Programming', 'Music', 'Art', 'Other'] },
+    levels: { type: [String], required: true },
+    hourlyRate: { type: Number, required: true },
+    yearsOfExperience: Number,
+    certification: String
+  }],
   teachingStyle: {
     type: String,
     enum: ['structured', 'conversational', 'task-based', 'blended'],
@@ -82,11 +102,6 @@ const TeacherSchema = new Schema<ITeacher>({
       message: "sertifikatlar soni 10tadan oshmasligi kerak!"
     }
   }],
-  hourlyRate: {
-    type: Number,
-    required: true,
-    min: [5000, "Bir soatlik narx kamida 5000 so'm bo'lishi kerak"]
-  },
   trialRate: {
     type: Number,
     validate: {
@@ -112,6 +127,54 @@ const TeacherSchema = new Schema<ITeacher>({
         match: [/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Noto\'g\'ri vaqt formati (HH:MM)']
       }]
     }
+  },
+  groupClasses: {
+    enabled: { type: Boolean, default: false },
+    classes: [{
+      subject: {
+        type: String,
+        required: [true, 'Subject is required'],
+        index: true
+      },
+      title: {
+        type: String,
+        required: [true, 'Class title is required'],
+        maxlength: [120, 'Title cannot exceed 120 characters']
+      },
+      description: {
+        type: String,
+        required: [true, 'Class description is required'],
+        maxlength: [500, 'Description cannot exceed 500 characters']
+      },
+      maxStudents: {
+        type: Number,
+        default: 10,
+        min: [2, 'Minimum 2 students required']
+      },
+      minStudents: {
+        type: Number,
+        default: 3,
+        min: [1, 'Minimum 1 student required']
+      },
+      price: {
+        type: Number,
+        required: [true, 'Price is required'],
+        min: [5, 'Minimum price is $5']
+      },
+      pricingType: {
+        type: String,
+        enum: ['perStudent', 'flatRate'],
+        default: 'perStudent'
+      },
+      discount: {
+        minStudents: Number,
+        percentage: {
+          type: Number,
+          min: [0, 'Discount cannot be negative'],
+          max: [100, 'Discount cannot exceed 100%']
+        }
+      }
+    }]
   },
   isProfileCompleted: {
     type: Boolean,

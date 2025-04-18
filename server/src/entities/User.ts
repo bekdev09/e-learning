@@ -1,8 +1,9 @@
 import { Document, model, Schema } from "mongoose";
 
 import { isStrongPassword } from "validator";
+import { ITimestamps } from "./Shared";
 
-interface IUser extends Document {
+interface IUser extends Document, ITimestamps {
   email: string,
   phone: string,
   password: string,
@@ -15,11 +16,9 @@ interface IUser extends Document {
   dateOfBirth?: Date
   status: 'active' | 'suspended' | 'pending',
   lastLogin: Date
-  createdAt: Date
-  updatedAt: Date
 }
 
-const UserSchema = new Schema({
+const UserSchema = new Schema<IUser>({
   email: {
     type: String,
     required: true,

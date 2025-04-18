@@ -1,7 +1,8 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { User } from "./User";
+import { ITimestamps } from "./Shared";
 
-interface ITeacher extends Document {
+interface ITeacher extends Document, ITimestamps {
   user: Types.ObjectId | typeof User;
   bio: string;
   specialties: string[];
@@ -27,8 +28,7 @@ interface ITeacher extends Document {
     }[];
   };
   isProfileCompleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+
 }
 
 const TeacherSchema = new Schema<ITeacher>({
@@ -127,4 +127,4 @@ TeacherSchema.virtual("avarageRating").get(function (this: ITeacher) {
 TeacherSchema.index({ "specialties": 1 })
 TeacherSchema.index({ "hourlyRate": 1 })
 
-export const Teacher = model("Teacher", TeacherSchema)
+export const Teacher = model<ITeacher>("Teacher", TeacherSchema)

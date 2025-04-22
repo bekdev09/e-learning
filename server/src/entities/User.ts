@@ -5,7 +5,7 @@ import { ITimestamps } from "./Shared";
 
 interface IUser extends Document, ITimestamps {
   email: string,
-  phone: string,
+  phone?: string,
   password: string,
   firstName: string,
   lastName?: string,
@@ -84,7 +84,8 @@ const UserSchema = new Schema<IUser>({
     required: true
   },
   lastLogin: {
-    type: Date
+    type: Date,
+    default: null
   },
   status: {
     type: String,
@@ -97,5 +98,10 @@ const UserSchema = new Schema<IUser>({
 
 UserSchema.index({ email: 1 }, { unique: true })
 UserSchema.index({ phone: 1 }, { unique: true })
+
+UserSchema.methods.updateLastLogin = async function () {
+  this.lastLogin = new Date();
+  await this.save();
+};
 
 export const User = model<IUser>("User", UserSchema)

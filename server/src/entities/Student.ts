@@ -1,8 +1,7 @@
 import { Schema, Document, Model, Types, model } from 'mongoose';
-import { ITimestamps } from './Shared';
 import { User } from './User';
 
-interface IStudent extends Document, ITimestamps {
+interface IStudent extends Document {
   user: Types.ObjectId | typeof User;
 
   subjects: {

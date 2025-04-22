@@ -2,7 +2,7 @@ import { Schema, model, Document, Types } from "mongoose";
 import { User } from "./User";
 import { IGroupClassSettings, ITimestamps, TEACHING_LEVELS } from "./Shared";
 
-interface ITeacher extends Document, ITimestamps, IGroupClassSettings {
+interface ITeacher extends Document, IGroupClassSettings {
   user: Types.ObjectId | typeof User;
   bio: string;
   specialties: {

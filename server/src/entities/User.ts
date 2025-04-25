@@ -30,7 +30,7 @@ const UserSchema = new Schema<IUser>({
   },
   phone: {
     type: String,
-    required: [true, 'Telefon raqam majburiy'],
+    // required: [true, 'Telefon raqam majburiy'],
     unique: [true, "Phone number is already in use."],
     match: [/^\+?[0-9]{9,15}$/, 'Iltimos to‘g‘ri telefon raqam kiriting'],
     index: true
